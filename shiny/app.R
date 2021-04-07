@@ -1,17 +1,22 @@
 library(leaflet)
 library(shiny)
 library(shinydashboard)
+library(magrittr)
+library(shinycssloaders)
 
-criancas <- readr::read_rds("../data/criancas.rds")
+# Importanto as bases (Disponíveis na pasta data)
+criancas <- readr::read_rds("data/criancas.rds")
 n_criancas <- nrow(criancas)
 
-pais <- readr::read_rds("../data/pais.rds") %>%
+pais <- readr::read_rds("data/pais.rds") %>%
   dplyr::slice_sample(n = 10)
 n_pais = nrow(pais)
 
-tempos_entre <- "../data/tempos_entre_chegadas.rds" %>%
+tempos_entre_chegadas <- "data/tempos_entre_chegadas.rds" %>%
   readr::read_rds() %>%
   sort()
+
+#-------------------------------------------------
 
 quer_adotar <- function(pai, crianca)
 {
@@ -29,29 +34,32 @@ quer_adotar <- function(pai, crianca)
   prod(!falhas)
 }
 
-tempo_ate_crianca <- function() sample(tempos_entre, 1)
-gera_crianca <- function() dplyr::slice_sample(criancas, n = 1)
+tempo_ate_crianca <- function()
+  sample(tempos_entre_chegadas, 1)
+gera_crianca <- function()
+  dplyr::slice_sample(criancas, n = 1)
 tempo_adocao_sim <- function(pai)
 {
   adotou <- 0
   tempo_total <- 0
   n_pais = nrow(pais)
   fila_pais <- rep(1, n_pais)
-  while(!adotou)
+  while (!adotou)
   {
     tempo_total <- tempo_total + tempo_ate_crianca()
     crianca <- gera_crianca()
     adotada <- 0
-    for(ii in 1:n_pais)
+    for (ii in 1:n_pais)
     {
-      if(quer_adotar(pais[ii,], crianca) & fila_pais[ii])
+      if (quer_adotar(pais[ii, ], crianca) & fila_pais[ii])
       {
         fila_pais[ii] = 0
         adotada <- 1
         break
       }
     }
-    if(!adotada & quer_adotar(pai, crianca)) adotou <- 1
+    if (!adotada & quer_adotar(pai, crianca))
+      adotou <- 1
   }
   tempo_total
 }
@@ -59,42 +67,45 @@ tempo_adocao_sim <- function(pai)
 tempo_adocao_m <- function(pai, n_sim = 100)
 {
   tempos_sim <- rep(NA, n_sim)
-  for(ii in 1:n_sim) tempos_sim[ii] <- tempo_adocao_sim(pai)
+  for (ii in 1:n_sim)
+    tempos_sim[ii] <- tempo_adocao_sim(pai)
   mean(tempos_sim)
 }
 
+#---------------------------------------------------------
 ui <- fluidPage(
   titlePanel("Selecione o perfil da criança Desejada"),
-
   fluidRow(
-    column(3,
-           wellPanel(
-             h4("Selecione o perfil desejado"),
-             sliderInput(inputId = "idade",
-                         label = "Faixa etária", 0, 18, value=c(1,7)),
-             selectInput("sexo",
-                         "Sexo",
-                         c("Todos" = "all",
-                           "Feminino" = "F",
-                           "Masculino" = "M")),
-             selectInput("cor",
-                         "Raça:",
-                         c("Todos" = "all",
-                           "Amarela" = "Amarela",
-                           "Branca" = "Branca",
-                           "Negra" = "Preta",
-                           "Parda" = "Parda",
-                           "Indígena" = "Indigena"))
-           )
-    ),
-    column(9,
-           wellPanel(
-             span("Tempo médio de espera na fila para adotar uma criança com esse perfil (em dias):",
-                  textOutput("t_adocao_m")))
-    )
+    column(3, wellPanel(
+      h4("Selecione o perfil desejado"),
+      sliderInput(
+        inputId = "idade",
+        label = "Faixa etária", 0, 18, value = c(1, 7)
+      ),
+      selectInput(
+        "sexo", "Sexo",
+        c("Todos" = "all", "Feminino" = "F", "Masculino" = "M")
+      ),
+      selectInput(
+        "cor", "Raça:",
+        c("Todos" = "all",
+          "Amarela" = "Amarela",
+          "Branca" = "Branca",
+          "Negra" = "Preta",
+          "Parda" = "Parda",
+          "Indígena" = "Indigena")
+      ),
+      actionButton("action", label = "Iniciar"),
+    )),
+
+    column(9, wellPanel(
+      span("Tempo médio de espera na fila para adotar uma criança com esse perfil (em dias):",
+           textOutput("t_adocao_m") %>% withSpinner())
+    ))
   )
 )
 
+#------------------------------------------------------
 server <- function(input, output, session) {
   perfil_pai = reactive({
     data.frame(
@@ -110,11 +121,14 @@ server <- function(input, output, session) {
     )
   })
 
-  tempo = reactive({
+  tempo = eventReactive(input$action, {
     perfil_pai() %>% tempo_adocao_m()
   })
 
-  output$t_adocao_m <- renderText({(tempo())})
+  output$t_adocao_m <- renderPrint({
+    (tempo())
+  })
+
 }
 
-shinyApp(ui=ui, server = server)
+shinyApp(ui = ui, server = server)
