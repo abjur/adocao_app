@@ -2,16 +2,17 @@ library(leaflet)
 library(shiny)
 library(shinydashboard)
 library(magrittr)
+library(shinycssloaders)
 
 # Importanto as bases (Disponíveis na pasta data)
-criancas <- readr::read_rds("../data/criancas.rds")
+criancas <- readr::read_rds("data/criancas.rds")
 n_criancas <- nrow(criancas)
 
-pais <- readr::read_rds("../data/pais.rds") %>%
+pais <- readr::read_rds("data/pais.rds") %>%
   dplyr::slice_sample(n = 10)
 n_pais = nrow(pais)
 
-tempos_entre <- "../data/tempos_entre_chegadas.rds" %>%
+tempos_entre_chegadas <- "data/tempos_entre_chegadas.rds" %>%
   readr::read_rds() %>%
   sort()
 
@@ -72,49 +73,38 @@ tempo_adocao_m <- function(pai, n_sim = 100)
 }
 
 #---------------------------------------------------------
-ui <- fluidPage(titlePanel("Selecione o perfil da criança Desejada"),
-                fluidRow(column(
-                  3,
-                  wellPanel(
-                    h4("Selecione o perfil desejado"),
-                    sliderInput(
-                      inputId = "idade",
-                      label = "Faixa etária",
-                      0,
-                      18,
-                      value = c(1, 7)
-                    ),
-                    selectInput(
-                      "sexo",
-                      "Sexo",
-                      c(
-                        "Todos" = "all",
-                        "Feminino" = "F",
-                        "Masculino" = "M"
-                      )
-                    ),
-                    selectInput(
-                      "cor",
-                      "Raça:",
-                      c(
-                        "Todos" = "all",
-                        "Amarela" = "Amarela",
-                        "Branca" = "Branca",
-                        "Negra" = "Preta",
-                        "Parda" = "Parda",
-                        "Indígena" = "Indigena"
-                      )
-                    ),
-                    actionButton("action", label = "Iniciar"),
-                  )
-                ),
-                column(9,
-                       wellPanel(
-                         span(
-                           "Tempo médio de espera na fila para adotar uma criança com esse perfil (em dias):",
-                           textOutput("t_adocao_m")
-                         )
-                       ))))
+ui <- fluidPage(
+  titlePanel("Selecione o perfil da criança Desejada"),
+  fluidRow(
+    column(3, wellPanel(
+      h4("Selecione o perfil desejado"),
+      sliderInput(
+        inputId = "idade",
+        label = "Faixa etária", 0, 18, value = c(1, 7)
+      ),
+      selectInput(
+        "sexo", "Sexo",
+        c("Todos" = "all", "Feminino" = "F", "Masculino" = "M")
+      ),
+      selectInput(
+        "cor", "Raça:",
+        c("Todos" = "all",
+          "Amarela" = "Amarela",
+          "Branca" = "Branca",
+          "Negra" = "Preta",
+          "Parda" = "Parda",
+          "Indígena" = "Indigena")
+      ),
+      actionButton("action", label = "Iniciar"),
+    )),
+
+    column(9, wellPanel(
+      span("Tempo médio de espera na fila para adotar uma criança com esse perfil (em dias):",
+           textOutput("t_adocao_m") %>% withSpinner())
+    ))
+  )
+)
+
 #------------------------------------------------------
 server <- function(input, output, session) {
   perfil_pai = reactive({
@@ -131,7 +121,7 @@ server <- function(input, output, session) {
     )
   })
 
-  tempo = reactive({
+  tempo = eventReactive(input$action, {
     perfil_pai() %>% tempo_adocao_m()
   })
 

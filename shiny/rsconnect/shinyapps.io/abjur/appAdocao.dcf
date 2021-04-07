@@ -1,0 +1,12 @@
+name: appAdocao
+title:
+username:
+account: abjur
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3802000
+bundleId: 4354192
+url: https://abjur.shinyapps.io/appAdocao/
+when: 1615916906.80735
+asMultiple: FALSE
+asStatic: FALSE
