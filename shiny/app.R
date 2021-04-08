@@ -4,6 +4,7 @@ library(shinydashboard)
 library(magrittr)
 library(shinycssloaders)
 
+
 # Importanto as bases (Disponíveis na pasta data)
 criancas <- readr::read_rds("data/criancas.rds")
 n_criancas <- nrow(criancas)
@@ -82,14 +83,13 @@ ui <- fluidPage(
         inputId = "idade",
         label = "Faixa etária", 0, 18, value = c(1, 7)
       ),
-      selectInput(
+      checkboxGroupInput(
         "sexo", "Sexo",
-        c("Todos" = "all", "Feminino" = "F", "Masculino" = "M")
+        c("Feminino" = "F", "Masculino" = "M")
       ),
-      selectInput(
+      checkboxGroupInput(
         "cor", "Raça:",
-        c("Todos" = "all",
-          "Amarela" = "Amarela",
+        c("Amarela" = "Amarela",
           "Branca" = "Branca",
           "Negra" = "Preta",
           "Parda" = "Parda",
