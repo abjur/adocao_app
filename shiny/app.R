@@ -1,9 +1,8 @@
 library(leaflet)
-library(shiny)
-library(shinydashboard)
 library(magrittr)
+library(shiny)
 library(shinycssloaders)
-
+library(shinydashboard)
 
 # Data -------------------------------------------------------------------------
 criancas <- readr::read_rds("data/criancas.rds")
@@ -72,7 +71,7 @@ server <- function(input, output, session) {
     )
   })
   tempo = eventReactive(input$action, {
-    perfil_pai() %>% tempo_adocao_m()
+    perfil_pai() %>% tempo_adocao_m(criancas, pais, tempos_entre_chegadas, n_sim = 100)
   })
   output$t_adocao_m <- renderPrint({
     (tempo())
