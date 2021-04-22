@@ -54,5 +54,5 @@ tempo_adocao_m <- function(pai, criancas, pais, tempos_entre_chegadas, n_sim = 1
   tempos_sim <- rep(NA, n_sim)
   for (ii in 1:n_sim)
     tempos_sim[ii] <- tempo_adocao_sim(pai, criancas, pais, tempos_entre_chegadas)
-  mean(tempos_sim)
+  tempos_sim
 }

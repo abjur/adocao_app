@@ -52,11 +52,17 @@ ui <-
               span(
                 "Tempo médio de espera na fila para adotar uma criança com esse perfil (em dias):",
                 textOutput("t_adocao_m") %>% withSpinner()
-              )
-            ))))
+              ),
+
+             mainPanel(
+               plotOutput("hist")
+             )
+
+            )
+            )))
 
 # Server -----------------------------------------------------------------------
-server <- function(input, output, session) {
+server <- function(input, output, session){
   perfil_pai = reactive({
     data.frame(
       idade_minima = input$idade[1],
@@ -70,11 +76,16 @@ server <- function(input, output, session) {
       cor_indigena = "Indígena" %in% input$cor
     )
   })
-  tempo = eventReactive(input$action, {
-    perfil_pai() %>% tempo_adocao_m(criancas, pais, tempos_entre_chegadas, n_sim = 100)
-  })
+tempos_adocao= eventReactive(input$action, {
+  tempo_adocao_m(perfil_pai(), criancas, pais, tempos_entre_chegadas, n_sim = 100)
+})
+
   output$t_adocao_m <- renderPrint({
-    (tempo())
+    mean(tempos_adocao())
+
+  })
+  output$hist <- renderPlot({
+    hist(tempos_adocao())
   })
 }
 # Run the aplication
