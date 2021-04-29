@@ -51,7 +51,7 @@ ui <-
             column(9, wellPanel(
               span(
                 "Tempo médio de espera na fila para adotar uma criança com esse perfil (em dias):",
-                textOutput("t_adocao_m") %>% withSpinner()
+                tableOutput("t_adocao_m") %>% withSpinner()
               ),
 
               plotOutput("hist")
@@ -81,8 +81,14 @@ server <- function(input, output, session) {
                    n_sim = 100)
   })
 
-  output$t_adocao_m <- renderPrint({
-    quantile(tempos_adocao(), c(0.5, 0.75))
+  output$t_adocao_m <- renderTable({
+    tempos <- tempos_adocao()
+    tibble::tibble(
+      media = mean(tempos),
+      "1º quartil" = quantile(tempos, .25),
+      mediana = median(tempos),
+      "3º quartil" = quantile(tempos, .75)
+    )
 
   })
   output$hist <- renderPlot({
