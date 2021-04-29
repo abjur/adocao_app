@@ -22,37 +22,47 @@ tempo_ate_crianca <- function(tempos_entre_chegadas)
 gera_crianca <- function(criancas)
   dplyr::slice_sample(criancas, n = 1)
 
-tempo_adocao_sim <- function(pai, criancas, pais, tempos_entre_chegadas)
-{
-  adotou <- 0
-  tempo_total <- 0
-  n_pais = nrow(pais)
-  fila_pais <- rep(1, n_pais)
-  while (!adotou)
+tempo_adocao_sim <-
+  function(pai,
+           criancas,
+           pais,
+           tempos_entre_chegadas)
   {
-    tempo_total <- tempo_total +
-      tempo_ate_crianca(tempos_entre_chegadas)
-    crianca <- gera_crianca(criancas)
-    adotada <- 0
-    for (ii in 1:n_pais)
+    adotou <- 0
+    tempo_total <- 0
+    n_pais = nrow(pais)
+    fila_pais <- rep(1, n_pais)
+    while (!adotou)
     {
-      if (quer_adotar(pais[ii,], crianca) & fila_pais[ii])
+      tempo_total <- tempo_total +
+        tempo_ate_crianca(tempos_entre_chegadas)
+      crianca <- gera_crianca(criancas)
+      adotada <- 0
+      for (ii in 1:n_pais)
       {
-        fila_pais[ii] = 0
-        adotada <- 1
-        break
+        if (quer_adotar(pais[ii, ], crianca) & fila_pais[ii])
+        {
+          fila_pais[ii] = 0
+          adotada <- 1
+          break
+        }
       }
+      if (!adotada & quer_adotar(pai, crianca))
+        adotou <- 1
     }
-    if (!adotada & quer_adotar(pai, crianca))
-      adotou <- 1
+    tempo_total
   }
-  tempo_total
-}
 
-tempo_adocao_m <- function(pai, criancas, pais, tempos_entre_chegadas, n_sim = 100)
-{
-  tempos_sim <- rep(NA, n_sim)
-  for (ii in 1:n_sim)
-    tempos_sim[ii] <- tempo_adocao_sim(pai, criancas, pais, tempos_entre_chegadas)
-  tempos_sim
-}
+tempo_adocao_m <-
+  function(pai,
+           criancas,
+           pais,
+           tempos_entre_chegadas,
+           n_sim = 100)
+  {
+    tempos_sim <- rep(NA, n_sim)
+    for (ii in 1:n_sim)
+      tempos_sim[ii] <-
+        tempo_adocao_sim(pai, criancas, pais, tempos_entre_chegadas)
+    tempos_sim
+  }

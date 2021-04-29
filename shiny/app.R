@@ -54,15 +54,12 @@ ui <-
                 textOutput("t_adocao_m") %>% withSpinner()
               ),
 
-             mainPanel(
-               plotOutput("hist")
-             )
+              plotOutput("hist")
 
-            )
-            )))
+            ))))
 
 # Server -----------------------------------------------------------------------
-server <- function(input, output, session){
+server <- function(input, output, session) {
   perfil_pai = reactive({
     data.frame(
       idade_minima = input$idade[1],
@@ -76,12 +73,16 @@ server <- function(input, output, session){
       cor_indigena = "Indígena" %in% input$cor
     )
   })
-tempos_adocao= eventReactive(input$action, {
-  tempo_adocao_m(perfil_pai(), criancas, pais, tempos_entre_chegadas, n_sim = 100)
-})
+  tempos_adocao = eventReactive(input$action, {
+    tempo_adocao_m(perfil_pai(),
+                   criancas,
+                   pais,
+                   tempos_entre_chegadas,
+                   n_sim = 100)
+  })
 
   output$t_adocao_m <- renderPrint({
-    mean(tempos_adocao())
+    quantile(tempos_adocao(), c(0.5, 0.75))
 
   })
   output$hist <- renderPlot({
