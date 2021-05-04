@@ -52,16 +52,14 @@ ui <-
             column(9, wellPanel(
               span(
                 "Tempo médio de espera na fila para adotar uma criança com esse perfil (em dias):",
-                textOutput("t_adocao_m") %>% withSpinner()
+                tableOutput("t_adocao_m") %>% withSpinner()
               ),
 
-              plotOutput("plot2"))
-
-            )
-            ))
+              plotOutput("plot2")
+            ))))
 
 # Server -----------------------------------------------------------------------
-server <- function(input, output, session){
+server <- function(input, output, session) {
   perfil_pai = reactive({
     data.frame(
       idade_minima = input$idade[1],
@@ -75,8 +73,12 @@ server <- function(input, output, session){
       cor_indigena = "Indígena" %in% input$cor
     )
   })
-  tempos_adocao= eventReactive(input$action, {
-    tempo_adocao_m(perfil_pai(), criancas, pais, tempos_entre_chegadas, n_sim = 100)
+  tempos_adocao = eventReactive(input$action, {
+    tempo_adocao_m(perfil_pai(),
+                   criancas,
+                   pais,
+                   tempos_entre_chegadas,
+                   n_sim = 100)
   })
 
   output$t_adocao_m <- renderTable({
@@ -89,15 +91,11 @@ server <- function(input, output, session){
     )
   })
 
-  output$t_adocao_m <- renderPrint({
-    mean(tempos_adocao())
-  })
-
-
   output$plot2 <- renderPlot({
-    ggplot(tibble::tibble(tempos = tempos_adocao()), aes(x = tempos))+
-      geom_histogram(colour ="transparent",
+    ggplot(tibble::tibble(tempos = tempos_adocao()), aes(x = tempos)) +
+      geom_histogram(colour = "transparent",
                      fill = "#414487") +
+      labs(x = "Tempos de adoção") +
       theme_minimal(12)
 
   })
