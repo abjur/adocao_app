@@ -1,8 +1,6 @@
-library(leaflet)
 library(magrittr)
 library(shiny)
 library(shinycssloaders)
-library(shinydashboard)
 
 # Data -------------------------------------------------------------------------
 criancas <- readr::read_rds("data/criancas.rds")
