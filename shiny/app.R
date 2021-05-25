@@ -93,7 +93,7 @@ server <- function(input, output, session) {
     tempos <- tempos_adocao()
     shiny::validate(shiny::need(
       all(is.finite(tempos)),
-      "Tempo estimado foi maior do que 20 anos."
+      "Tempo estimado foi maior do que 20 anos.\nPor favor, mude o perfil selecionado."
     ))
 
     tibble::tibble(
