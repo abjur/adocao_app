@@ -1,6 +1,7 @@
 library(magrittr)
 library(shiny)
 library(shinycssloaders)
+library(ggplot2)
 
 # Data -------------------------------------------------------------------------
 criancas <- readr::read_rds("data/criancas.rds")
@@ -49,18 +50,14 @@ ui <-
             column(9, wellPanel(
               span(
                 "Tempo médio de espera na fila para adotar uma criança com esse perfil (em dias):",
-                textOutput("t_adocao_m") %>% withSpinner()
+                tableOutput("t_adocao_m") %>% withSpinner()
               ),
 
-             mainPanel(
-               plotOutput("hist")
-             )
-
-            )
-            )))
+              plotOutput("plot2")
+            ))))
 
 # Server -----------------------------------------------------------------------
-server <- function(input, output, session){
+server <- function(input, output, session) {
   perfil_pai = reactive({
     data.frame(
       idade_minima = input$idade[1],
@@ -74,17 +71,33 @@ server <- function(input, output, session){
       cor_indigena = "Indígena" %in% input$cor
     )
   })
-tempos_adocao= eventReactive(input$action, {
-  tempo_adocao_m(perfil_pai(), criancas, pais, tempos_entre_chegadas, n_sim = 100)
-})
+  tempos_adocao = eventReactive(input$action, {
+    tempo_adocao_m(perfil_pai(),
+                   criancas,
+                   pais,
+                   tempos_entre_chegadas,
+                   n_sim = 100)
+  })
 
-  output$t_adocao_m <- renderPrint({
-    mean(tempos_adocao())
+  output$t_adocao_m <- renderTable({
+    tempos <- tempos_adocao()
+    tibble::tibble(
+      media = mean(tempos),
+      "1º quartil" = quantile(tempos, .25),
+      mediana = median(tempos),
+      "3º quartil" = quantile(tempos, .75)
+    )
+  })
+
+  output$plot2 <- renderPlot({
+    ggplot(tibble::tibble(tempos = tempos_adocao()), aes(x = tempos)) +
+      geom_histogram(colour = "transparent",
+                     fill = "#414487") +
+      labs(x = "Tempos de adoção") +
+      theme_minimal(12)
 
   })
-  output$hist <- renderPlot({
-    hist(tempos_adocao())
-  })
+
 }
 # Run the aplication
 shinyApp(ui = ui, server = server)
